@@ -18,6 +18,9 @@ interface ContactDao {
     @Delete
     suspend fun delete(contact: Contact)
 
+    @Query("UPDATE contacts SET imageUri = :imageUri WHERE id = :contactId")
+    suspend fun updateContactImage(contactId: String, imageUri: String)
+
     @Query("SELECT * FROM contacts")
     fun getAllContacts(): LiveData<List<Contact>>
 }

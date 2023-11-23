@@ -2,8 +2,11 @@ package com.example.smd_a3_20l1271
 
 import android.app.Application
 import android.content.ContentResolver
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.provider.ContactsContract
+import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -16,6 +19,10 @@ import kotlinx.coroutines.launch
 
 class ContactViewModel(application: Application) : AndroidViewModel(application) {
     private lateinit var repository: ContactRepository
+
+    private val _insertedContact = MutableLiveData<Contact?>()
+    val insertedContact: LiveData<Contact?> get() = _insertedContact
+
     private val _contacts = MutableLiveData<List<Contact>>()
     val contacts: LiveData<List<Contact>> get() = _contacts
 
@@ -23,6 +30,7 @@ class ContactViewModel(application: Application) : AndroidViewModel(application)
     val selectedContact: LiveData<Contact?> get() = _selectedContact
 
     private val READ_CONTACTS_PERMISSION_REQUEST_CODE = 123
+    private val CONTACT_PICKER_REQUEST = 123
 
     init {
         // Initialize your repository here
@@ -33,6 +41,13 @@ class ContactViewModel(application: Application) : AndroidViewModel(application)
         repository.allContacts.observeForever { contacts ->
             _contacts.value = contacts
         }
+    }
+    private val _selectedImageUri = MutableLiveData<Uri?>()
+    val selectedImageUri: LiveData<Uri?> get() = _selectedImageUri
+
+    fun setSelectedImageUri(uri: Uri?) {
+        _selectedImageUri.value = uri
+        Log.d("image", uri.toString() )
     }
 
     fun setRepository(contactRepository: ContactRepository) {
@@ -88,7 +103,8 @@ class ContactViewModel(application: Application) : AndroidViewModel(application)
 
                         val contact = Contact(
                             name = contactName ?: "",
-                            phone = phoneNumber ?: ""
+                            phone = phoneNumber ?: "",
+                            imageUri = "android.resource://com.example.smd_a3_20l1271/drawable/baseline_person_24"
                         )
                         contactsList.add(contact)
                     }
@@ -116,10 +132,19 @@ class ContactViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun getPhoneNumber(
+    fun importSpecificContacts(contentResolver: ContentResolver, activity: MainActivity) {
+        val contactPickerIntent = Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI)
+        activity.startActivityForResult(contactPickerIntent, CONTACT_PICKER_REQUEST)
+    }
+
+    fun getPhoneNumber(
         contentResolver: ContentResolver,
         contactId: String?
     ): String? {
+        if (contactId.isNullOrBlank()) {
+            return null
+        }
+
         val cursor = contentResolver.query(
             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
             null,
@@ -129,15 +154,28 @@ class ContactViewModel(application: Application) : AndroidViewModel(application)
         )
 
         cursor?.use {
-            val phoneNumberIndex =
-                it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+            val phoneNumberIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
 
             if (it.moveToFirst() && phoneNumberIndex != -1) {
-                return it.getString(phoneNumberIndex)
+                val phoneNumber = it.getString(phoneNumberIndex)
+                Log.d("ContactViewModel", "PhoneNumber for ContactId=$contactId: $phoneNumber")
+                return phoneNumber
             }
         }
 
+        Log.d("ContactViewModel", "PhoneNumber for ContactId=$contactId not found")
         return null
+    }
+
+
+    fun insertContact(contact: Contact) {
+        viewModelScope.launch(Dispatchers.Main) {
+            repository.insert(contact)
+        }
+    }
+
+    fun clearInsertedContact() {
+        _insertedContact.value = null
     }
 
     fun updateContact(contact: Contact) {

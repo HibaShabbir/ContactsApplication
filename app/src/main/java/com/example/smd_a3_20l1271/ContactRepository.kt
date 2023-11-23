@@ -25,4 +25,9 @@ class ContactRepository(private val contactDao: ContactDao) {
     suspend fun deleteContact(contact: Contact) {
         contactDao.delete(contact)
     }
+
+    suspend fun updateContactImage(contactId: String, imageUri: String) {
+
+        contactDao.updateContactImage(contactId, imageUri)
+    }
 }

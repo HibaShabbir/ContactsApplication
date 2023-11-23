@@ -15,6 +15,9 @@ data class Contact(
     @ColumnInfo(name = "phone")
     val phone: String,
 
+    @ColumnInfo(name = "imageUri")
+    val imageUri: String?,
+
 )
 
 /*

@@ -87,4 +87,8 @@ dependencies {
     implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0-beta01")
     implementation ("androidx.compose.runtime:runtime-livedata:1.6.0-alpha08")
 
+    //coil
+    implementation ("com.google.accompanist:accompanist-coil:0.15.0")
+
+
 }
