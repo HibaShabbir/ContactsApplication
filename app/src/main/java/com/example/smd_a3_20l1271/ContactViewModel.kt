@@ -7,13 +7,16 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.ContactsContract
 import android.util.Log
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import coil.load
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -46,9 +49,18 @@ class ContactViewModel(application: Application) : AndroidViewModel(application)
     val selectedImageUri: LiveData<Uri?> get() = _selectedImageUri
 
     fun setSelectedImageUri(uri: Uri?) {
-        _selectedImageUri.value = uri
-        Log.d("image", uri.toString() )
+        val decodedUri = Uri.decode(uri.toString()).toUri()
+        _selectedImageUri.value = decodedUri
+        Log.d("image", decodedUri.toString() )
     }
+
+    fun loadSelectedImageIntoImageView(imageView: ImageView) {
+        _selectedImageUri.value?.let { imageUri ->
+            // Use Coil to load the image into the provided ImageView
+            imageView.load(imageUri)
+        }
+    }
+
 
     fun setRepository(contactRepository: ContactRepository) {
         repository = contactRepository

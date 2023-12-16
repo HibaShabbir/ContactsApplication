@@ -156,6 +156,7 @@ class MainActivity : ComponentActivity() {
                 data?.data?.let { imageUri ->
                     // Update the selected image URI in the view model
                     viewModel.setSelectedImageUri(imageUri)
+
                 }
             }
         }
@@ -219,13 +220,16 @@ class MainActivity : ComponentActivity() {
             // Display the contact image
             Image(
                 painter = if (contact.imageUri != null) {
-                    rememberCoilPainter(request = contact.imageUri)
+                    val decodedUri = Uri.decode(contact.imageUri)
+                    Log.d("ContactListItem", "Loading image from URI: $decodedUri")
+                    rememberCoilPainter(request = decodedUri)
                 } else {
                     painterResource(id = R.drawable.baseline_person_24)
                 },
                 contentDescription = null,
                 modifier = Modifier.size(30.dp).clickable {
                     // Launch image picker when the image is clicked
+                    Log.d("ContactListItem", "Image clicked")
                     openImagePicker()
                 }
             )
